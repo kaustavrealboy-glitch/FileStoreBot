@@ -27,11 +27,8 @@ async def top_users(limit=5):
     ]
     return await files_col.aggregate(pipeline).to_list(length=limit)
 
-def is_served_user(user_id: int) -> bool:
-    if not files_col == False:
-        user = files_col.find_one({"user_id": user_id})
-        if not user:
-            return False
-        return True
-    else:
+async def is_served_user(user_id: int) -> bool:
+    if not files_col:
         return False
+    user = await files_col.find_one({"user_id": user_id})
+    return bool(user)
