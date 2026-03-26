@@ -4,25 +4,39 @@ from bot.client import app
 from bot.database import files_col
 from bot.utils.stats import is_served_user
 from config import settings
-from bot.utils.telegram_api import Telegram_API
+from bot.utils.telegram_api import TelegramAPI
 
 @app.on_message(filters.command("start") & filters.private)
 async def start(_, message: Message):
-    if not is_served_user(message.chat.id):
-        await files_col.insert_one({"user_id": message.chat.id})
     args = message.text.split()[1:]
     if args:
+        try:
+            if not await is_served_user(message.chat.id):
+                await files_col.insert_one({"user_id": message.chat.id})
+        except Exception:
+            pass
         uuid = args[0]
-        record = await files_col.find_one({"uuid": uuid})
+        try:
+            record = await files_col.find_one({"uuid": uuid})
+        except Exception:
+            await message.reply("❌ Database unavailable. Please try again in a moment.")
+            return
         if not record:
             await message.reply("❌ File not found or expired.")
             return
-        Telegram_API().copyMessage(
+        copied = await TelegramAPI().copy_message(
             chat_id=message.chat.id,
             from_chat_id=settings.STORAGE_CHANNEL_ID,
             message_id=record["file_msg_id"],
         )
+        if not copied:
+            await message.reply("❌ Failed to fetch the file. Please try again later.")
     else:
+        try:
+            if not await is_served_user(message.chat.id):
+                await files_col.insert_one({"user_id": message.chat.id})
+        except Exception:
+            pass
         board = InlineKeyboardMarkup(
             [
                 [
