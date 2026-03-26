@@ -1,7 +1,15 @@
-from bot.client import create_web_app, start_webapp, stop_webapp
-import os, asyncio
+import asyncio
+import os
+
+# Pyrogram's sync wrapper expects a current event loop at import time.
+# Python 3.14 no longer creates one implicitly for the main thread.
+try:
+    asyncio.get_event_loop()
+except RuntimeError:
+    asyncio.set_event_loop(asyncio.new_event_loop())
+
 from pyrogram import idle
-from bot.client import app as client
+from bot.client import app as client, create_web_app, start_webapp, stop_webapp
 
 
 async def main():
@@ -17,5 +25,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    asyncio.run(main())

@@ -1,3 +1,12 @@
+import asyncio
+
+# Pyrogram's sync wrapper expects a current event loop at import time.
+# Python 3.14 no longer creates one implicitly for the main thread.
+try:
+    asyncio.get_event_loop()
+except RuntimeError:
+    asyncio.set_event_loop(asyncio.new_event_loop())
+
 from pyrogram import Client
 from config import settings
 from aiohttp import web
